@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Park Tag - Contact Owner</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 420px;
+      width: 100%;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 20px;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .header .tag-code {
+      font-size: 13px;
+      color: #888;
+      font-family: monospace;
+    }
+    .vehicle-info {
+      text-align: center;
+      padding: 16px;
+      background: #f0f7ff;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .vehicle-info .icon { font-size: 32px; margin-bottom: 8px; }
+    .vehicle-info p { font-size: 15px; color: #555; }
+    .lang-toggle {
+      text-align: right;
+      margin-bottom: 12px;
+    }
+    .lang-toggle button {
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #666;
+    }
+    .lang-toggle button.active {
+      background: #0066ff;
+      color: #fff;
+      border-color: #0066ff;
+    }
+    .actions { display: flex; flex-direction: column; gap: 12px; }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-call {
+      background: #0066ff;
+      color: #fff;
+    }
+    .btn-sms {
+      background: #00c853;
+      color: #fff;
+    }
+    .btn-whatsapp {
+      background: #25D366;
+      color: #fff;
+    }
+    .btn-emergency {
+      background: #fff;
+      color: #ff3b30;
+      border: 2px solid #ff3b30;
+      font-size: 14px;
+    }
+    .btn-icon { font-size: 20px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 380px;
+    }
+    .modal h2 { font-size: 18px; margin-bottom: 16px; }
+    .modal input, .modal textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .modal textarea { resize: vertical; min-height: 80px; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
+    .btn-cancel { background: #eee; color: #333; }
+
+    .status-msg {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+      display: none;
+    }
+    .status-msg.success { display: block; background: #e8f5e9; color: #2e7d32; }
+    .status-msg.error { display: block; background: #ffebee; color: #c62828; }
+    .status-msg.loading { display: block; background: #e3f2fd; color: #1565c0; }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 13px;
+      color: #999;
+    }
+    .footer a { color: #0066ff; text-decoration: none; }
+
+    .privacy-note {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-toggle">
+      <button class="active" onclick="setLang('en')" id="btn-en">EN</button>
+      <button onclick="setLang('sw')" id="btn-sw">SW</button>
+    </div>
+
+    <div class="card">
+      <div class="header">
+        <h1 id="title">Contact Car Owner</h1>
+        <span class="tag-code"><%= tagCode %></span>
+      </div>
+
+      <div class="vehicle-info">
+        <div class="icon">🚗</div>
+        <p id="vehicle-desc">
+          <% if (vehicleColor && vehicleMake) { %>
+            <%= vehicleColor %> <%= vehicleMake %>
+          <% } else if (vehicleMake) { %>
+            <%= vehicleMake %>
+          <% } else { %>
+            Vehicle registered
+          <% } %>
+        </p>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-call" onclick="openCallModal()">
+          <span class="btn-icon">📞</span>
+          <span id="btn-call-text">Call Owner</span>
+        </button>
+
+        <button class="btn btn-sms" onclick="openSmsModal()">
+          <span class="btn-icon">💬</span>
+          <span id="btn-sms-text">Send SMS</span>
+        </button>
+
+        <% if (whatsappPhone) { %>
+        <a class="btn btn-whatsapp"
+           href="https://wa.me/<%= whatsappPhone %>?text=BLOCKED%20<%= tagCode %>"
+           target="_blank">
+          <span class="btn-icon">📱</span>
+          <span>WhatsApp</span>
+        </a>
+        <% } %>
+
+        <% if (hasEmergencyContact) { %>
+        <button class="btn btn-emergency" onclick="contactEmergency()">
+          <span class="btn-icon">🆘</span>
+          <span id="btn-emergency-text">Emergency Contact</span>
+        </button>
+        <% } %>
+      </div>
+
+      <div class="status-msg" id="status-msg"></div>
+      <p class="privacy-note" id="privacy-note">
+        Your phone number is only used for this call and is not shared with the car owner.
+      </p>
+    </div>
+
+    <div class="footer">
+      <span id="footer-text">Don't have a tag?</span>
+      <a href="<%= baseUrl %>/register" id="footer-link">Get your own Car Park Tag</a>
+    </div>
+  </div>
+
+  <!-- Call Modal -->
+  <div class="modal-overlay" id="call-modal">
+    <div class="modal">
+      <h2 id="call-modal-title">Enter your phone number</h2>
+      <p style="font-size:13px;color:#666;margin-bottom:12px" id="call-modal-desc">
+        We'll call you and connect you to the car owner. Neither of you will see each other's number.
+      </p>
+      <input type="tel" id="call-phone" placeholder="0712 345 678" maxlength="13">
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal('call-modal')">Cancel</button>
+        <button class="btn btn-call" onclick="initiateCall()">Call Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMS Modal -->
+  <div class="modal-overlay" id="sms-modal">
+    <div class="modal">
+      <h2 id="sms-modal-title">Send a message to the owner</h2>
+      <textarea id="sms-message" placeholder="Your car is blocking someone. Please move it."></textarea>
+      <input type="tel" id="sms-phone" placeholder="Your phone (optional)" maxlength="13">
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal('sms-modal')">Cancel</button>
+        <button class="btn btn-sms" onclick="sendSms()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var TAG_CODE = '<%= tagCode %>';
+    var BASE_URL = '<%= baseUrl %>';
+
+    // Translations
+    var translations = {
+      en: {
+        title: 'Contact Car Owner',
+        callBtn: 'Call Owner',
+        smsBtn: 'Send SMS',
+        emergencyBtn: 'Emergency Contact',
+        privacyNote: 'Your phone number is only used for this call and is not shared with the car owner.',
+        footerText: "Don't have a tag?",
+        footerLink: 'Get your own Car Park Tag',
+        callModalTitle: 'Enter your phone number',
+        callModalDesc: "We'll call you and connect you to the car owner. Neither of you will see each other's number.",
+        smsModalTitle: 'Send a message to the owner'
+      },
+      sw: {
+        title: 'Wasiliana na Mmiliki wa Gari',
+        callBtn: 'Piga Simu',
+        smsBtn: 'Tuma Ujumbe',
+        emergencyBtn: 'Mawasiliano ya Dharura',
+        privacyNote: 'Nambari yako ya simu inatumika tu kwa simu hii na haishirikishwi na mmiliki wa gari.',
+        footerText: 'Huna tagi?',
+        footerLink: 'Pata Car Park Tag yako',
+        callModalTitle: 'Weka nambari yako ya simu',
+        callModalDesc: 'Tutakupigia simu na kukuunganisha na mmiliki wa gari. Hakuna atakayeona nambari ya mwingine.',
+        smsModalTitle: 'Tuma ujumbe kwa mmiliki'
+      }
+    };
+
+    function setLang(lang) {
+      var t = translations[lang];
+      document.getElementById('title').textContent = t.title;
+      document.getElementById('btn-call-text').textContent = t.callBtn;
+      document.getElementById('btn-sms-text').textContent = t.smsBtn;
+      var emergBtn = document.getElementById('btn-emergency-text');
+      if (emergBtn) emergBtn.textContent = t.emergencyBtn;
+      document.getElementById('privacy-note').textContent = t.privacyNote;
+      document.getElementById('footer-text').textContent = t.footerText;
+      document.getElementById('footer-link').textContent = t.footerLink;
+      document.getElementById('call-modal-title').textContent = t.callModalTitle;
+      document.getElementById('call-modal-desc').textContent = t.callModalDesc;
+      document.getElementById('sms-modal-title').textContent = t.smsModalTitle;
+      document.getElementById('btn-en').className = lang === 'en' ? 'active' : '';
+      document.getElementById('btn-sw').className = lang === 'sw' ? 'active' : '';
+    }
+
+    function showStatus(msg, type) {
+      var el = document.getElementById('status-msg');
+      el.textContent = msg;
+      el.className = 'status-msg ' + type;
+    }
+
+    function openCallModal() { document.getElementById('call-modal').classList.add('active'); }
+    function openSmsModal() { document.getElementById('sms-modal').classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function initiateCall() {
+      var phone = document.getElementById('call-phone').value.trim();
+      if (!phone || phone.length < 9) {
+        alert('Please enter a valid phone number');
+        return;
+      }
+      closeModal('call-modal');
+      showStatus('Initiating call... Your phone will ring shortly.', 'loading');
+
+      fetch(BASE_URL + '/api/scan/' + TAG_CODE + '/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanner_phone: phone })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) showStatus(data.error, 'error');
+        else showStatus('Call initiated! Your phone will ring shortly.', 'success');
+      })
+      .catch(function() { showStatus('Failed to connect. Please try SMS.', 'error'); });
+    }
+
+    function sendSms() {
+      var message = document.getElementById('sms-message').value.trim();
+      var phone = document.getElementById('sms-phone').value.trim();
+      if (!message) { alert('Please enter a message'); return; }
+      closeModal('sms-modal');
+      showStatus('Sending message...', 'loading');
+
+      fetch(BASE_URL + '/api/scan/' + TAG_CODE + '/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message, scanner_phone: phone || undefined })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) showStatus(data.error, 'error');
+        else showStatus('Message sent to the car owner!', 'success');
+      })
+      .catch(function() { showStatus('Failed to send. Please try again.', 'error'); });
+    }
+
+    function contactEmergency() {
+      if (!confirm('Contact the owner\'s emergency contact? Use this only if the owner is unreachable.')) return;
+      showStatus('Contacting emergency contact...', 'loading');
+
+      fetch(BASE_URL + '/api/scan/' + TAG_CODE + '/emergency', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) showStatus(data.error, 'error');
+        else showStatus('Emergency contact has been notified.', 'success');
+      })
+      .catch(function() { showStatus('Failed to reach emergency contact.', 'error'); });
+    }
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        if (e.target === el) el.classList.remove('active');
+      });
+    });
+  </script>
+</body>
+</html>
