@@ -1,5 +1,5 @@
 {
-  "name": "smart-car-park-tag",
+  "name": "smart-tags",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
@@ -7,11 +7,15 @@
     "packages/web"
   ],
   "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
     "dev:server": "npm run dev -w packages/server",
     "dev:web": "npm run dev -w packages/web",
+    "build": "npm run build:web && npm run build:server",
     "build:server": "npm run build -w packages/server",
     "build:web": "npm run build -w packages/web",
+    "start": "NODE_ENV=production node packages/server/dist/index.js",
     "lint": "npm run lint -w packages/server && npm run lint -w packages/web",
-    "migrate": "npm run migrate -w packages/server"
+    "migrate": "npm run migrate -w packages/server",
+    "seed": "PGPASSWORD=2023 psql -U postgres -h localhost -d carparktag -f packages/server/src/db/seed.sql"
   }
 }

@@ -13,18 +13,62 @@ const OTP_EXPIRY_MINUTES = 10;
 export async function registerUser(
   fullName: string,
   phone: string,
-  password: string
+  password: string,
+  email?: string
 ): Promise<User> {
   const normalizedPhone = normalizeKenyanPhone(phone);
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
   const rows = await query<User>(
-    `INSERT INTO users (full_name, phone, password_hash)
-     VALUES ($1, $2, $3)
+    `INSERT INTO users (full_name, phone, password_hash, email)
+     VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [fullName, normalizedPhone, passwordHash]
+    [fullName, normalizedPhone, passwordHash, email || null]
   );
   return rows[0];
+}
+
+export async function findOrCreateOAuthUser(
+  provider: string,
+  oauthId: string,
+  email: string,
+  fullName: string,
+  avatarUrl?: string
+): Promise<User> {
+  // Check if user exists with this OAuth ID
+  let user = await queryOne<User>(
+    `SELECT * FROM users WHERE oauth_provider = $1 AND oauth_id = $2`,
+    [provider, oauthId]
+  );
+  if (user) return user;
+
+  // Check if user exists with this email — link accounts
+  user = await queryOne<User>(
+    `SELECT * FROM users WHERE email = $1`,
+    [email]
+  );
+  if (user) {
+    const rows = await query<User>(
+      `UPDATE users SET oauth_provider = $1, oauth_id = $2, avatar_url = COALESCE(avatar_url, $3)
+       WHERE id = $4 RETURNING *`,
+      [provider, oauthId, avatarUrl || null, user.id]
+    );
+    return rows[0];
+  }
+
+  // Create new user (no phone yet — they'll add it later)
+  const rows = await query<User>(
+    `INSERT INTO users (full_name, email, oauth_provider, oauth_id, avatar_url, phone, phone_verified)
+     VALUES ($1, $2, $3, $4, $5, '', FALSE)
+     RETURNING *`,
+    [fullName, email, provider, oauthId, avatarUrl || null]
+  );
+  return rows[0];
+}
+
+export async function generateUserToken(user: User): Promise<string> {
+  const payload: UserJwtPayload = { userId: user.id, phone: user.phone || "" };
+  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: JWT_EXPIRY });
 }
 
 export async function requestOtp(
@@ -95,7 +139,7 @@ export async function loginUser(
     [normalizedPhone]
   );
 
-  if (!user) return null;
+  if (!user || !user.password_hash) return null;
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return null;
 

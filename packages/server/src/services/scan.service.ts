@@ -5,13 +5,23 @@ export async function createScanSession(
   tagId: string,
   scannerIp: string | null,
   scannerPhone: string | null,
-  source: "qr" | "sms" | "whatsapp"
+  source: "qr" | "sms" | "whatsapp",
+  location?: { latitude?: number; longitude?: number },
+  userAgent?: string | null
 ): Promise<ScanSession> {
   const rows = await query<ScanSession>(
-    `INSERT INTO scan_sessions (tag_id, scanner_ip, scanner_phone, source)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO scan_sessions (tag_id, scanner_ip, scanner_phone, source, latitude, longitude, user_agent)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
-    [tagId, scannerIp, scannerPhone, source]
+    [
+      tagId,
+      scannerIp,
+      scannerPhone,
+      source,
+      location?.latitude || null,
+      location?.longitude || null,
+      userAgent || null,
+    ]
   );
   return rows[0];
 }

@@ -11,6 +11,7 @@ import * as scanService from "../services/scan.service";
 import { sendSms, makeCall } from "../integrations/africastalking";
 import { normalizeKenyanPhone, isValidKenyanPhone } from "../utils/phone";
 import { env } from "../config/env";
+import { sendScanNotificationEmail } from "../services/email.service";
 
 const router = Router();
 
@@ -36,34 +37,73 @@ router.get(
     const tagCode = req.params.tagCode as string;
     const tag = await tagService.getTagByCode(tagCode);
 
-    if (!tag || tag.status !== "active") {
+    if (!tag) {
+      res.render("scan-error", { message: "Tag not found.", tagCode });
+      return;
+    }
+
+    if (tag.is_paused) {
       res.render("scan-error", {
-        message: tag ? "This tag is not currently active." : "Tag not found.",
+        message: "This tag has been temporarily paused by the owner.",
+        tagCode,
+      });
+      return;
+    }
+
+    // Pending tag → show payment/activation page to the owner
+    if (tag.status === "pending") {
+      res.render("scan-activate", {
+        tagCode: tag.tag_code,
+        tagId: tag.id,
+        vehicleMake: tag.vehicle_make,
+        vehicleColor: tag.vehicle_color,
+        itemType: tag.item_type || "car",
+        ownerPhone: tag.owner_phone,
+        baseUrl: env.BASE_URL,
+      });
+      return;
+    }
+
+    if (tag.status !== "active") {
+      res.render("scan-error", {
+        message: "This tag is not currently active.",
         tagCode,
       });
       return;
     }
 
     // Log scan session
-    await scanService.createScanSession(
+    const session = await scanService.createScanSession(
       tag.id,
       req.ip || null,
       null,
-      "qr"
+      "qr",
+      undefined,
+      req.headers["user-agent"] || null
     );
 
-    // Notify owner that their tag was scanned
+    // Notify owner that their tag was scanned (email in dev, SMS in prod)
+    const ownerUser = await import("../services/auth.service").then(m => m.getUserById(tag.owner_phone ? tag.id : ""));
+    // Always try email notification
+    sendScanNotificationEmail(tag, session).catch((err) =>
+      console.error("Failed to send scan email:", err)
+    );
+
     if (env.NODE_ENV === "production") {
       sendSms(
         tag.owner_phone,
         `Someone scanned your Car Park Tag (${tag.vehicle_color || ""} ${tag.vehicle_make || "car"}). They may try to contact you.`
       ).catch((err) => console.error("Failed to notify owner:", err));
+    } else {
+      console.log(`[DEV] Tag ${tag.tag_code} scanned. Owner: ${tag.owner_phone}`);
     }
 
     res.render("scan-landing", {
       tagCode: tag.tag_code,
       vehicleMake: tag.vehicle_make,
       vehicleColor: tag.vehicle_color,
+      itemType: tag.item_type || "car",
+      customMessage: tag.custom_message || "",
       hasEmergencyContact: !!tag.emergency_phone,
       whatsappPhone: env.WHATSAPP_BUSINESS_PHONE,
       baseUrl: env.BASE_URL,
@@ -198,6 +238,41 @@ router.post(
       console.error("Failed to contact emergency:", err);
       res.status(500).json({ error: "Failed to reach emergency contact." });
     }
+  }
+);
+
+// POST /s/:tagCode/location — Receive GPS location from finder's browser
+const locationSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  scan_session_id: z.string().uuid().optional(),
+});
+
+router.post(
+  "/:tagCode/location",
+  validate(locationSchema),
+  async (req: Request, res: Response): Promise<void> => {
+    const { latitude, longitude } = req.body;
+    const tagCode = req.params.tagCode as string;
+
+    const tag = await tagService.getTagByCode(tagCode);
+    if (!tag) {
+      res.status(404).json({ error: "Tag not found" });
+      return;
+    }
+
+    // Update the most recent scan session for this tag with the location
+    await import("../config/database").then(({ query }) =>
+      query(
+        `UPDATE scan_sessions SET latitude = $1, longitude = $2
+         WHERE tag_id = $3 AND created_at > NOW() - INTERVAL '5 minutes'
+         AND latitude IS NULL
+         ORDER BY created_at DESC LIMIT 1`,
+        [latitude, longitude, tag.id]
+      )
+    );
+
+    res.json({ message: "Location received" });
   }
 );
 

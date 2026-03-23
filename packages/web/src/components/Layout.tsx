@@ -1,27 +1,53 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 
 export default function Layout() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await api.logout();
     navigate("/login");
   };
 
+  const navItems = [
+    { path: "/dashboard", label: "My Items" },
+    { path: "/scans", label: "Scans" },
+    { path: "/plans", label: "Plans" },
+    { path: "/shop", label: "Shop" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-slate-50">
+      <nav className="bg-primary shadow-lg">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/dashboard" className="text-lg font-bold text-primary">
-            Car Park Tag
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gold flex items-center justify-center">
+              <span className="text-primary-dark font-extrabold text-sm">ST</span>
+            </div>
+            <span className="text-lg font-bold text-white">Smart Tags</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm text-blue-200 hover:text-white transition-colors"
           >
             Logout
           </button>
+        </div>
+        <div className="max-w-2xl mx-auto px-4 flex gap-1 pb-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
+                location.pathname === item.path
+                  ? "bg-white text-primary"
+                  : "text-blue-200 hover:bg-white/10"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
       </nav>
       <main className="max-w-2xl mx-auto px-4 py-6">

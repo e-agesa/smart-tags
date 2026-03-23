@@ -22,7 +22,7 @@ async function request<T>(
 
 export const api = {
   // Auth
-  register: (body: { full_name: string; phone: string; password: string }) =>
+  register: (body: { full_name: string; phone: string; password: string; email?: string }) =>
     request("/auth/register", { method: "POST", body: JSON.stringify(body) }),
 
   verifyOtp: (body: { phone: string; code: string; purpose: string }) =>
@@ -31,12 +31,28 @@ export const api = {
   login: (body: { phone: string; password: string }) =>
     request("/auth/login", { method: "POST", body: JSON.stringify(body) }),
 
+  googleAuth: (credential: string) =>
+    request<{
+      message: string;
+      user: {
+        id: string;
+        full_name: string;
+        phone: string;
+        email: string | null;
+        phone_verified: boolean;
+        lang_pref: string;
+        avatar_url: string | null;
+        needs_phone: boolean;
+      };
+    }>("/auth/google", { method: "POST", body: JSON.stringify({ credential }) }),
+
   logout: () => request("/auth/logout", { method: "POST" }),
 
   getProfile: () => request<{
     id: string;
     full_name: string;
     phone: string;
+    email: string | null;
     phone_verified: boolean;
     emergency_phone: string | null;
     emergency_name: string | null;
@@ -61,6 +77,7 @@ export const api = {
     license_plate: string;
     make?: string;
     color?: string;
+    item_type?: string;
   }) => request("/vehicles", { method: "POST", body: JSON.stringify(body) }),
 
   deleteVehicle: (id: string) =>
@@ -80,6 +97,16 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  // Tag management
+  toggleTagPause: (tagId: string) =>
+    request(`/tags/${tagId}/pause`, { method: "PUT" }),
+
+  updateTagMessage: (tagId: string, message: string) =>
+    request(`/tags/${tagId}/message`, {
+      method: "PUT",
+      body: JSON.stringify({ message }),
+    }),
+
   getPayments: () =>
     request<Array<{
       id: string;
@@ -88,4 +115,41 @@ export const api = {
       mpesa_receipt: string | null;
       created_at: string;
     }>>("/payments"),
+
+  // Subscriptions
+  getPlans: () => request<Array<{
+    id: string; name: string; slug: string;
+    price_kes: number; price_usd: number;
+    interval_months: number; max_tags: number;
+    features: string[];
+  }>>("/plans"),
+
+  getSubscription: () => request<{
+    plan_slug: string; plan_name: string;
+    max_tags: number; features: string[];
+    expires_at?: string;
+  }>("/subscription"),
+
+  subscribe: (planSlug: string, paymentRef?: string) =>
+    request("/subscription", {
+      method: "POST",
+      body: JSON.stringify({ plan_slug: planSlug, payment_ref: paymentRef }),
+    }),
+
+  // Stickers
+  getStickerDesigns: () => request<Array<{
+    slug: string; name: string; price_kes: number; description: string;
+  }>>("/stickers/designs"),
+
+  orderStickers: (body: {
+    qty: number; design: string;
+    shipping_name: string; shipping_phone: string;
+    shipping_address: string; shipping_city: string;
+  }) => request("/stickers/order", { method: "POST", body: JSON.stringify(body) }),
+
+  getStickerOrders: () => request<Array<{
+    id: string; qty: number; design: string;
+    total_kes: number; status: string;
+    tracking_no: string | null; created_at: string;
+  }>>("/stickers/orders"),
 };

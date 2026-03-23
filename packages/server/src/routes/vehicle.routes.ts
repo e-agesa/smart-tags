@@ -9,11 +9,11 @@ const router = Router();
 const createVehicleSchema = z.object({
   license_plate: z
     .string()
-    .min(4)
-    .max(20)
-    .regex(/^[A-Za-z0-9\s-]+$/, "Invalid license plate format"),
+    .min(1)
+    .max(20),
   make: z.string().max(50).optional(),
   color: z.string().max(30).optional(),
+  item_type: z.enum(["car", "bike", "luggage", "keys", "pet", "other"]).default("car"),
 });
 
 // All vehicle routes require auth
@@ -29,7 +29,8 @@ router.post(
         req.user!.userId,
         req.body.license_plate,
         req.body.make,
-        req.body.color
+        req.body.color,
+        req.body.item_type
       );
       res.status(201).json(vehicle);
     } catch (err: unknown) {

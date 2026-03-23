@@ -32,6 +32,25 @@ export function requireAuth(
   }
 }
 
+export function optionalAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void {
+  const token = req.cookies?.token;
+  if (!token) {
+    next();
+    return;
+  }
+  try {
+    const payload = jwt.verify(token, env.JWT_SECRET) as UserJwtPayload;
+    req.user = payload;
+  } catch {
+    // Invalid token — proceed without auth
+  }
+  next();
+}
+
 export function requireAdmin(
   req: Request,
   res: Response,

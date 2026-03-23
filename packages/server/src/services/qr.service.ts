@@ -28,3 +28,30 @@ export async function generateQrBuffer(tagCode: string): Promise<Buffer> {
     errorCorrectionLevel: "H",
   });
 }
+
+/**
+ * Generate a QR code as SVG string (for high-res printing).
+ */
+export async function generateQrSvg(tagCode: string): Promise<string> {
+  const scanUrl = `${env.BASE_URL}/s/${tagCode}`;
+  return QRCode.toString(scanUrl, {
+    type: "svg",
+    width: 400,
+    margin: 2,
+    errorCorrectionLevel: "H",
+  });
+}
+
+/**
+ * Generate a batch of QR codes as SVG strings.
+ */
+export async function generateBatchQrSvg(
+  tagCodes: string[]
+): Promise<Array<{ tag_code: string; svg: string }>> {
+  const results = [];
+  for (const code of tagCodes) {
+    const svg = await generateQrSvg(code);
+    results.push({ tag_code: code, svg });
+  }
+  return results;
+}

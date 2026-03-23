@@ -36,16 +36,18 @@ export async function getTagByCode(tagCode: string): Promise<
   | (Tag & {
       vehicle_make: string | null;
       vehicle_color: string | null;
+      item_type: string;
       owner_phone: string;
       owner_name: string;
+      owner_email: string | null;
       emergency_phone: string | null;
       emergency_name: string | null;
     })
   | null
 > {
   return queryOne(
-    `SELECT t.*, v.make as vehicle_make, v.color as vehicle_color,
-            u.phone as owner_phone, u.full_name as owner_name,
+    `SELECT t.*, v.make as vehicle_make, v.color as vehicle_color, v.item_type,
+            u.phone as owner_phone, u.full_name as owner_name, u.email as owner_email,
             u.emergency_phone, u.emergency_name
      FROM tags t
      JOIN vehicles v ON v.id = t.vehicle_id
@@ -82,5 +84,25 @@ export async function updateTagStatus(
   return queryOne<Tag>(
     `UPDATE tags SET status = $1 WHERE id = $2 RETURNING *`,
     [status, tagId]
+  );
+}
+
+export async function toggleTagPause(
+  tagId: string,
+  isPaused: boolean
+): Promise<Tag | null> {
+  return queryOne<Tag>(
+    `UPDATE tags SET is_paused = $1 WHERE id = $2 RETURNING *`,
+    [isPaused, tagId]
+  );
+}
+
+export async function updateCustomMessage(
+  tagId: string,
+  message: string | null
+): Promise<Tag | null> {
+  return queryOne<Tag>(
+    `UPDATE tags SET custom_message = $1 WHERE id = $2 RETURNING *`,
+    [message, tagId]
   );
 }

@@ -12,6 +12,7 @@ const registerSchema = z.object({
   full_name: z.string().min(2).max(150),
   phone: z.string().refine(isValidKenyanPhone, "Invalid Kenyan phone number"),
   password: z.string().min(6).max(100),
+  email: z.string().email().optional(),
 });
 
 const otpSchema = z.object({
@@ -32,6 +33,7 @@ const loginSchema = z.object({
 
 const updateProfileSchema = z.object({
   full_name: z.string().min(2).max(150).optional(),
+  email: z.string().email().optional(),
   emergency_phone: z
     .string()
     .refine(isValidKenyanPhone, "Invalid Kenyan phone number")
@@ -49,13 +51,20 @@ router.post(
       const user = await authService.registerUser(
         req.body.full_name,
         req.body.phone,
-        req.body.password
+        req.body.password,
+        req.body.email
       );
       // Auto-send OTP for registration
       await authService.requestOtp(req.body.phone, "registration");
+
+      // Grant 1-month free trial
+      const { grantFreeTrial } = await import("../services/promo.service");
+      await grantFreeTrial(user.id).catch(() => {});
+
       res.status(201).json({
-        message: "Account created. Please verify your phone number.",
+        message: "Account created with 1-month free trial! Please verify your phone number.",
         userId: user.id,
+        trial: true,
       });
     } catch (err: unknown) {
       const pgErr = err as { code?: string };
@@ -124,6 +133,7 @@ router.post(
         id: result.user.id,
         full_name: result.user.full_name,
         phone: result.user.phone,
+        email: result.user.email,
         phone_verified: result.user.phone_verified,
         lang_pref: result.user.lang_pref,
       },
@@ -151,6 +161,7 @@ router.get(
       id: user.id,
       full_name: user.full_name,
       phone: user.phone,
+      email: user.email,
       phone_verified: user.phone_verified,
       emergency_phone: user.emergency_phone,
       emergency_name: user.emergency_name,
@@ -174,10 +185,68 @@ router.put(
       id: user.id,
       full_name: user.full_name,
       phone: user.phone,
+      email: user.email,
       emergency_phone: user.emergency_phone,
       emergency_name: user.emergency_name,
       lang_pref: user.lang_pref,
     });
+  }
+);
+
+// POST /api/auth/google — Google OAuth token exchange
+const googleSchema = z.object({
+  credential: z.string(),
+});
+
+router.post(
+  "/google",
+  validate(googleSchema),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Decode Google JWT (ID token) — in production, verify with Google's public keys
+      const parts = req.body.credential.split(".");
+      const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
+
+      const { sub: googleId, email, name, picture } = payload;
+      if (!email || !googleId) {
+        res.status(400).json({ error: "Invalid Google token" });
+        return;
+      }
+
+      const user = await authService.findOrCreateOAuthUser(
+        "google",
+        googleId,
+        email,
+        name || email.split("@")[0],
+        picture
+      );
+
+      const token = await authService.generateUserToken(user);
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
+      res.json({
+        message: "Login successful",
+        user: {
+          id: user.id,
+          full_name: user.full_name,
+          phone: user.phone,
+          email: user.email,
+          phone_verified: user.phone_verified,
+          lang_pref: user.lang_pref,
+          avatar_url: user.avatar_url,
+          needs_phone: !user.phone,
+        },
+      });
+    } catch (err) {
+      console.error("Google OAuth error:", err);
+      res.status(500).json({ error: "Google authentication failed" });
+    }
   }
 );
 

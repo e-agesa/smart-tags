@@ -1,0 +1,13 @@
+-- Up
+ALTER TABLE scan_sessions ADD COLUMN IF NOT EXISTS latitude DECIMAL(10,7);
+ALTER TABLE scan_sessions ADD COLUMN IF NOT EXISTS longitude DECIMAL(10,7);
+ALTER TABLE scan_sessions ADD COLUMN IF NOT EXISTS user_agent TEXT;
+ALTER TABLE scan_sessions ADD COLUMN IF NOT EXISTS city VARCHAR(100);
+ALTER TABLE scan_sessions ADD COLUMN IF NOT EXISTS country VARCHAR(100);
+
+-- Down
+ALTER TABLE scan_sessions DROP COLUMN IF EXISTS latitude;
+ALTER TABLE scan_sessions DROP COLUMN IF EXISTS longitude;
+ALTER TABLE scan_sessions DROP COLUMN IF EXISTS user_agent;
+ALTER TABLE scan_sessions DROP COLUMN IF EXISTS city;
+ALTER TABLE scan_sessions DROP COLUMN IF EXISTS country;

@@ -3,243 +3,558 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Car Park Tag - Contact Owner</title>
+  <title>Smart Tags — Contact Owner</title>
+  <meta name="description" content="Someone needs to reach you about your vehicle. Smart Tags — scan, contact, resolve.">
+  <meta property="og:title" content="Smart Tags — Contact Vehicle Owner">
+  <meta property="og:description" content="Tap to contact the owner of this vehicle privately and securely.">
+  <meta name="theme-color" content="#0f2460">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0f2460;
+      --card: #1a3a8f;
+      --card-alt: #2451c4;
+      --accent: #dc2626;
+      --accent-hover: #ef4444;
+      --green: #22c55e;
+      --green-hover: #16a34a;
+      --whatsapp: #25D366;
+      --red: #dc2626;
+      --gold: #eab308;
+      --gold-light: #facc15;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f5f5;
-      color: #333;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      -webkit-font-smoothing: antialiased;
     }
-    .container {
-      max-width: 420px;
-      width: 100%;
-      padding: 20px;
+    .container { max-width: 440px; width: 100%; padding: 16px; }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0 16px;
     }
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      margin-bottom: 16px;
+    .brand {
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--gold);
+      letter-spacing: -0.3px;
     }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .header h1 {
-      font-size: 20px;
-      color: #1a1a1a;
-      margin-bottom: 4px;
-    }
-    .header .tag-code {
-      font-size: 13px;
-      color: #888;
-      font-family: monospace;
-    }
-    .vehicle-info {
-      text-align: center;
-      padding: 16px;
-      background: #f0f7ff;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-    .vehicle-info .icon { font-size: 32px; margin-bottom: 8px; }
-    .vehicle-info p { font-size: 15px; color: #555; }
-    .lang-toggle {
-      text-align: right;
-      margin-bottom: 12px;
-    }
+    .lang-toggle { display: flex; gap: 4px; }
     .lang-toggle button {
-      background: none;
-      border: 1px solid #ddd;
+      background: var(--card);
+      border: 1px solid var(--card-alt);
       border-radius: 6px;
-      padding: 4px 10px;
+      padding: 4px 12px;
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      color: #666;
+      color: var(--text-muted);
+      font-family: inherit;
+      transition: all 0.15s;
     }
     .lang-toggle button.active {
-      background: #0066ff;
+      background: var(--accent);
       color: #fff;
-      border-color: #0066ff;
+      border-color: var(--accent);
     }
-    .actions { display: flex; flex-direction: column; gap: 12px; }
-    .btn {
+
+    /* Main card */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      border: 1px solid var(--card-alt);
+    }
+    .card + .card { margin-top: 12px; }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 24px; }
+    .header .icon-ring {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--gold));
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 16px;
-      border: none;
+      margin: 0 auto 14px;
+      font-size: 28px;
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+    .header .tag-code {
+      display: inline-block;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: var(--bg);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* Vehicle info */
+    .vehicle-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      margin-bottom: 24px;
+    }
+    .vehicle-info .v-icon {
+      width: 44px; height: 44px;
       border-radius: 12px;
-      font-size: 16px;
+      background: linear-gradient(135deg, #1e3a5f, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .vehicle-info .v-details { flex: 1; }
+    .vehicle-info .v-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+    .vehicle-info .v-desc {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    <% if (customMessage) { %>
+    /* Custom message */
+    .custom-msg {
+      padding: 12px 16px;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 24px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      text-align: center;
+    }
+    <% } %>
+
+    /* Action buttons */
+    .actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 18px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
-      transition: transform 0.1s, opacity 0.2s;
+      font-family: inherit;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
     }
     .btn:active { transform: scale(0.98); }
+    .btn .icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .btn .label { flex: 1; text-align: left; }
+    .btn .label small {
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-top: 1px;
+    }
+    .btn .arrow {
+      font-size: 16px;
+      color: rgba(255,255,255,0.4);
+    }
+
     .btn-call {
-      background: #0066ff;
+      background: var(--accent);
       color: #fff;
     }
+    .btn-call:hover { background: var(--accent-hover); }
+    .btn-call .icon { background: rgba(255,255,255,0.15); }
+
     .btn-sms {
-      background: #00c853;
+      background: var(--green);
       color: #fff;
     }
+    .btn-sms:hover { background: var(--green-hover); }
+    .btn-sms .icon { background: rgba(255,255,255,0.15); }
+
     .btn-whatsapp {
-      background: #25D366;
+      background: var(--whatsapp);
       color: #fff;
     }
-    .btn-emergency {
-      background: #fff;
-      color: #ff3b30;
-      border: 2px solid #ff3b30;
-      font-size: 14px;
+    .btn-whatsapp:hover { background: #1da851; }
+    .btn-whatsapp .icon { background: rgba(255,255,255,0.15); }
+
+    .btn-chat {
+      background: var(--card-alt);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.06);
     }
-    .btn-icon { font-size: 20px; }
+    .btn-chat:hover { background: #475569; }
+    .btn-chat .icon { background: rgba(255,255,255,0.08); }
+
+    .btn-email {
+      background: var(--card-alt);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .btn-email:hover { background: #475569; }
+    .btn-email .icon { background: rgba(255,255,255,0.08); }
+
+    .btn-emergency {
+      background: transparent;
+      color: var(--red);
+      border: 1px solid var(--red);
+      margin-top: 4px;
+    }
+    .btn-emergency:hover { background: rgba(239,68,68,0.1); }
+    .btn-emergency .icon { background: rgba(239,68,68,0.12); }
+
+    /* Amenities row */
+    .amenities {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .amenity {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 64px;
+      padding: 10px 8px;
+      background: var(--card);
+      border: 1px solid var(--card-alt);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .amenity:hover { background: var(--card-alt); color: var(--text); }
+    .amenity .a-icon { font-size: 20px; }
+
+    /* Status message */
+    .status-msg {
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-top: 16px;
+      display: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .status-msg.success { display: block; background: rgba(34,197,94,0.12); color: var(--green); }
+    .status-msg.error { display: block; background: rgba(239,68,68,0.12); color: var(--red); }
+    .status-msg.loading { display: block; background: rgba(59,130,246,0.12); color: var(--accent); }
+
+    /* Privacy */
+    .privacy {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 10px 14px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .privacy .shield { font-size: 16px; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
 
     /* Modal */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
       z-index: 100;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
     }
     .modal-overlay.active { display: flex; }
     .modal {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      width: 90%;
-      max-width: 380px;
+      background: var(--card);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 28px 24px 32px;
+      width: 100%;
+      max-width: 440px;
+      border: 1px solid var(--card-alt);
+      border-bottom: none;
+      animation: slideUp 0.25s ease-out;
     }
-    .modal h2 { font-size: 18px; margin-bottom: 16px; }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .modal .modal-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
     .modal input, .modal textarea {
       width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      padding: 14px;
+      border: 1px solid var(--card-alt);
+      border-radius: var(--radius-sm);
       font-size: 15px;
       margin-bottom: 12px;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
     }
+    .modal input:focus, .modal textarea:focus {
+      border-color: var(--accent);
+    }
+    .modal input::placeholder, .modal textarea::placeholder { color: var(--text-dim); }
     .modal textarea { resize: vertical; min-height: 80px; }
-    .modal-actions { display: flex; gap: 10px; }
-    .modal-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
-    .btn-cancel { background: #eee; color: #333; }
-
-    .status-msg {
-      text-align: center;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 12px;
-      display: none;
-    }
-    .status-msg.success { display: block; background: #e8f5e9; color: #2e7d32; }
-    .status-msg.error { display: block; background: #ffebee; color: #c62828; }
-    .status-msg.loading { display: block; background: #e3f2fd; color: #1565c0; }
-
-    .footer {
-      text-align: center;
-      padding: 20px;
-      font-size: 13px;
-      color: #999;
-    }
-    .footer a { color: #0066ff; text-decoration: none; }
-
-    .privacy-note {
-      font-size: 12px;
-      color: #999;
-      text-align: center;
-      margin-top: 8px;
+    .modal-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .modal-actions .btn { flex: 1; justify-content: center; padding: 14px; }
+    .btn-cancel {
+      background: var(--bg);
+      color: var(--text-muted);
+      border: 1px solid var(--card-alt);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="lang-toggle">
-      <button class="active" onclick="setLang('en')" id="btn-en">EN</button>
-      <button onclick="setLang('sw')" id="btn-sw">SW</button>
+    <!-- Top bar -->
+    <div class="topbar">
+      <span class="brand">Smart Tags</span>
+      <div class="lang-toggle">
+        <button class="active" onclick="setLang('en')" id="btn-en">EN</button>
+        <button onclick="setLang('sw')" id="btn-sw">SW</button>
+      </div>
     </div>
 
+    <!-- Main card -->
     <div class="card">
       <div class="header">
-        <h1 id="title">Contact Car Owner</h1>
+        <div class="icon-ring">
+          <% if (itemType === 'bike') { %>
+            &#x1F6B2;
+          <% } else if (itemType === 'luggage') { %>
+            &#x1F9F3;
+          <% } else if (itemType === 'keys') { %>
+            &#x1F511;
+          <% } else if (itemType === 'pet') { %>
+            &#x1F43E;
+          <% } else { %>
+            &#x1F697;
+          <% } %>
+        </div>
+        <h1 id="title">Contact Owner</h1>
         <span class="tag-code"><%= tagCode %></span>
       </div>
 
+      <!-- Vehicle / Item info -->
       <div class="vehicle-info">
-        <div class="icon">🚗</div>
-        <p id="vehicle-desc">
-          <% if (vehicleColor && vehicleMake) { %>
-            <%= vehicleColor %> <%= vehicleMake %>
-          <% } else if (vehicleMake) { %>
-            <%= vehicleMake %>
+        <div class="v-icon">
+          <% if (itemType === 'bike') { %>
+            &#x1F6B2;
+          <% } else if (itemType === 'luggage') { %>
+            &#x1F9F3;
+          <% } else if (itemType === 'keys') { %>
+            &#x1F511;
+          <% } else if (itemType === 'pet') { %>
+            &#x1F43E;
           <% } else { %>
-            Vehicle registered
+            &#x1F697;
           <% } %>
-        </p>
+        </div>
+        <div class="v-details">
+          <div class="v-label" id="vehicle-label">Vehicle</div>
+          <div class="v-desc" id="vehicle-desc">
+            <% if (vehicleColor && vehicleMake) { %>
+              <%= vehicleColor %> <%= vehicleMake %>
+            <% } else if (vehicleMake) { %>
+              <%= vehicleMake %>
+            <% } else { %>
+              Registered item
+            <% } %>
+          </div>
+        </div>
       </div>
 
+      <% if (customMessage) { %>
+      <div class="custom-msg"><%= customMessage %></div>
+      <% } %>
+
+      <!-- Actions -->
       <div class="actions">
         <button class="btn btn-call" onclick="openCallModal()">
-          <span class="btn-icon">📞</span>
-          <span id="btn-call-text">Call Owner</span>
+          <span class="icon">&#x1F4DE;</span>
+          <span class="label">
+            <span id="btn-call-text">Call Owner</span>
+            <small id="btn-call-sub">Private masked call</small>
+          </span>
+          <span class="arrow">&#x203A;</span>
         </button>
 
         <button class="btn btn-sms" onclick="openSmsModal()">
-          <span class="btn-icon">💬</span>
-          <span id="btn-sms-text">Send SMS</span>
+          <span class="icon">&#x1F4AC;</span>
+          <span class="label">
+            <span id="btn-sms-text">Send SMS</span>
+            <small id="btn-sms-sub">Text the owner directly</small>
+          </span>
+          <span class="arrow">&#x203A;</span>
         </button>
 
         <% if (whatsappPhone) { %>
         <a class="btn btn-whatsapp"
-           href="https://wa.me/<%= whatsappPhone %>?text=BLOCKED%20<%= tagCode %>"
+           href="https://wa.me/<%= whatsappPhone %>?text=Hi%2C%20I%20scanned%20tag%20<%= tagCode %>%20—%20your%20vehicle%20needs%20attention."
            target="_blank">
-          <span class="btn-icon">📱</span>
-          <span>WhatsApp</span>
+          <span class="icon">&#x1F4F1;</span>
+          <span class="label">
+            <span>WhatsApp</span>
+            <small>Open chat in WhatsApp</small>
+          </span>
+          <span class="arrow">&#x203A;</span>
         </a>
         <% } %>
 
+        <button class="btn btn-chat" onclick="openChatModal()">
+          <span class="icon">&#x1F5E8;</span>
+          <span class="label">
+            <span id="btn-chat-text">Anonymous Chat</span>
+            <small id="btn-chat-sub">Chat without sharing your number</small>
+          </span>
+          <span class="arrow">&#x203A;</span>
+        </button>
+
         <% if (hasEmergencyContact) { %>
         <button class="btn btn-emergency" onclick="contactEmergency()">
-          <span class="btn-icon">🆘</span>
-          <span id="btn-emergency-text">Emergency Contact</span>
+          <span class="icon">&#x1F6A8;</span>
+          <span class="label">
+            <span id="btn-emergency-text">Emergency Contact</span>
+            <small id="btn-emergency-sub">Owner unreachable? Notify emergency.</small>
+          </span>
+          <span class="arrow">&#x203A;</span>
         </button>
         <% } %>
       </div>
 
       <div class="status-msg" id="status-msg"></div>
-      <p class="privacy-note" id="privacy-note">
-        Your phone number is only used for this call and is not shared with the car owner.
-      </p>
+
+      <div class="privacy" id="privacy-note">
+        <span class="shield">&#x1F6E1;</span>
+        <span>Your identity is protected. No personal information is shared with the owner.</span>
+      </div>
+    </div>
+
+    <!-- Nearby amenities -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px" id="amenities-label">Nearby</div>
+      <div class="amenities">
+        <a class="amenity" href="https://maps.google.com/maps?q=parking+near+me" target="_blank">
+          <span class="a-icon">&#x1F17F;</span>
+          <span>Parking</span>
+        </a>
+        <a class="amenity" href="https://maps.google.com/maps?q=gas+station+near+me" target="_blank">
+          <span class="a-icon">&#x26FD;</span>
+          <span>Fuel</span>
+        </a>
+        <a class="amenity" href="https://maps.google.com/maps?q=police+station+near+me" target="_blank">
+          <span class="a-icon">&#x1F6A8;</span>
+          <span>Police</span>
+        </a>
+        <a class="amenity" href="https://maps.google.com/maps?q=hospital+near+me" target="_blank">
+          <span class="a-icon">&#x1F3E5;</span>
+          <span>Hospital</span>
+        </a>
+        <a class="amenity" href="https://maps.google.com/maps?q=mechanic+near+me" target="_blank">
+          <span class="a-icon">&#x1F527;</span>
+          <span>Mechanic</span>
+        </a>
+      </div>
     </div>
 
     <div class="footer">
       <span id="footer-text">Don't have a tag?</span>
-      <a href="<%= baseUrl %>/register" id="footer-link">Get your own Car Park Tag</a>
+      <a href="<%= baseUrl %>/register" id="footer-link">Get your Smart Tag</a>
     </div>
   </div>
 
-  <!-- Call Modal -->
+  <!-- Call Modal (bottom sheet) -->
   <div class="modal-overlay" id="call-modal">
     <div class="modal">
-      <h2 id="call-modal-title">Enter your phone number</h2>
-      <p style="font-size:13px;color:#666;margin-bottom:12px" id="call-modal-desc">
-        We'll call you and connect you to the car owner. Neither of you will see each other's number.
+      <h2 id="call-modal-title">Call the owner</h2>
+      <p class="modal-desc" id="call-modal-desc">
+        We'll connect you privately. Neither party sees the other's number.
       </p>
-      <input type="tel" id="call-phone" placeholder="0712 345 678" maxlength="13">
+      <input type="tel" id="call-phone" placeholder="Your phone number (e.g. 0712 345 678)" maxlength="13">
       <div class="modal-actions">
         <button class="btn btn-cancel" onclick="closeModal('call-modal')">Cancel</button>
-        <button class="btn btn-call" onclick="initiateCall()">Call Now</button>
+        <button class="btn btn-call" onclick="initiateCall()">
+          <span class="icon">&#x1F4DE;</span> Call Now
+        </button>
       </div>
     </div>
   </div>
@@ -247,12 +562,29 @@
   <!-- SMS Modal -->
   <div class="modal-overlay" id="sms-modal">
     <div class="modal">
-      <h2 id="sms-modal-title">Send a message to the owner</h2>
-      <textarea id="sms-message" placeholder="Your car is blocking someone. Please move it."></textarea>
-      <input type="tel" id="sms-phone" placeholder="Your phone (optional)" maxlength="13">
+      <h2 id="sms-modal-title">Send a message</h2>
+      <p class="modal-desc" id="sms-modal-desc">Your message will be sent to the owner via SMS.</p>
+      <textarea id="sms-message" placeholder="e.g. Your car is blocking the exit. Please move it."></textarea>
+      <input type="tel" id="sms-phone" placeholder="Your phone (optional — for reply)" maxlength="13">
       <div class="modal-actions">
         <button class="btn btn-cancel" onclick="closeModal('sms-modal')">Cancel</button>
-        <button class="btn btn-sms" onclick="sendSms()">Send</button>
+        <button class="btn btn-sms" onclick="sendSms()">
+          <span class="icon">&#x1F4AC;</span> Send
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Modal -->
+  <div class="modal-overlay" id="chat-modal">
+    <div class="modal">
+      <h2 id="chat-modal-title">Anonymous Chat</h2>
+      <p class="modal-desc" id="chat-modal-desc">Chat with the owner without sharing your phone number. Messages are end-to-end private.</p>
+      <div id="chat-messages" style="max-height:200px;overflow-y:auto;margin-bottom:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm)">
+        <p style="color:var(--text-dim);font-size:13px;text-align:center">Chat is coming soon.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal('chat-modal')">Close</button>
       </div>
     </div>
   </div>
@@ -261,31 +593,34 @@
     var TAG_CODE = '<%= tagCode %>';
     var BASE_URL = '<%= baseUrl %>';
 
-    // Translations
     var translations = {
       en: {
-        title: 'Contact Car Owner',
-        callBtn: 'Call Owner',
-        smsBtn: 'Send SMS',
-        emergencyBtn: 'Emergency Contact',
-        privacyNote: 'Your phone number is only used for this call and is not shared with the car owner.',
-        footerText: "Don't have a tag?",
-        footerLink: 'Get your own Car Park Tag',
-        callModalTitle: 'Enter your phone number',
-        callModalDesc: "We'll call you and connect you to the car owner. Neither of you will see each other's number.",
-        smsModalTitle: 'Send a message to the owner'
+        title: 'Contact Owner',
+        callBtn: 'Call Owner', callSub: 'Private masked call',
+        smsBtn: 'Send SMS', smsSub: 'Text the owner directly',
+        chatBtn: 'Anonymous Chat', chatSub: 'Chat without sharing your number',
+        emergencyBtn: 'Emergency Contact', emergencySub: 'Owner unreachable? Notify emergency.',
+        privacyNote: 'Your identity is protected. No personal information is shared with the owner.',
+        footerText: "Don't have a tag?", footerLink: 'Get your Smart Tag',
+        callModalTitle: 'Call the owner',
+        callModalDesc: "We'll connect you privately. Neither party sees the other's number.",
+        smsModalTitle: 'Send a message', smsModalDesc: 'Your message will be sent to the owner via SMS.',
+        chatModalTitle: 'Anonymous Chat', chatModalDesc: 'Chat with the owner without sharing your phone number.',
+        amenities: 'Nearby'
       },
       sw: {
-        title: 'Wasiliana na Mmiliki wa Gari',
-        callBtn: 'Piga Simu',
-        smsBtn: 'Tuma Ujumbe',
-        emergencyBtn: 'Mawasiliano ya Dharura',
-        privacyNote: 'Nambari yako ya simu inatumika tu kwa simu hii na haishirikishwi na mmiliki wa gari.',
-        footerText: 'Huna tagi?',
-        footerLink: 'Pata Car Park Tag yako',
-        callModalTitle: 'Weka nambari yako ya simu',
-        callModalDesc: 'Tutakupigia simu na kukuunganisha na mmiliki wa gari. Hakuna atakayeona nambari ya mwingine.',
-        smsModalTitle: 'Tuma ujumbe kwa mmiliki'
+        title: 'Wasiliana na Mmiliki',
+        callBtn: 'Piga Simu', callSub: 'Simu ya faragha',
+        smsBtn: 'Tuma Ujumbe', smsSub: 'Tuma ujumbe moja kwa moja',
+        chatBtn: 'Gumzo Bila Jina', chatSub: 'Ongea bila kushiriki nambari yako',
+        emergencyBtn: 'Dharura', emergencySub: 'Mmiliki hapatikani? Arifu dharura.',
+        privacyNote: 'Utambulisho wako umelindwa. Hakuna taarifa binafsi inayoshirikiwa.',
+        footerText: 'Huna tagi?', footerLink: 'Pata Smart Tag yako',
+        callModalTitle: 'Pigia mmiliki',
+        callModalDesc: 'Tutakuunganisha kwa faragha. Hakuna atakayeona nambari ya mwingine.',
+        smsModalTitle: 'Tuma ujumbe', smsModalDesc: 'Ujumbe wako utatumwa kwa mmiliki kupitia SMS.',
+        chatModalTitle: 'Gumzo Bila Jina', chatModalDesc: 'Ongea na mmiliki bila kushiriki nambari yako.',
+        amenities: 'Karibu na Hapa'
       }
     };
 
@@ -293,15 +628,25 @@
       var t = translations[lang];
       document.getElementById('title').textContent = t.title;
       document.getElementById('btn-call-text').textContent = t.callBtn;
+      document.getElementById('btn-call-sub').textContent = t.callSub;
       document.getElementById('btn-sms-text').textContent = t.smsBtn;
-      var emergBtn = document.getElementById('btn-emergency-text');
-      if (emergBtn) emergBtn.textContent = t.emergencyBtn;
-      document.getElementById('privacy-note').textContent = t.privacyNote;
+      document.getElementById('btn-sms-sub').textContent = t.smsSub;
+      document.getElementById('btn-chat-text').textContent = t.chatBtn;
+      document.getElementById('btn-chat-sub').textContent = t.chatSub;
+      var eb = document.getElementById('btn-emergency-text');
+      if (eb) eb.textContent = t.emergencyBtn;
+      var es = document.getElementById('btn-emergency-sub');
+      if (es) es.textContent = t.emergencySub;
+      document.getElementById('privacy-note').lastElementChild.textContent = t.privacyNote;
       document.getElementById('footer-text').textContent = t.footerText;
       document.getElementById('footer-link').textContent = t.footerLink;
       document.getElementById('call-modal-title').textContent = t.callModalTitle;
       document.getElementById('call-modal-desc').textContent = t.callModalDesc;
       document.getElementById('sms-modal-title').textContent = t.smsModalTitle;
+      document.getElementById('sms-modal-desc').textContent = t.smsModalDesc;
+      document.getElementById('chat-modal-title').textContent = t.chatModalTitle;
+      document.getElementById('chat-modal-desc').textContent = t.chatModalDesc;
+      document.getElementById('amenities-label').textContent = t.amenities;
       document.getElementById('btn-en').className = lang === 'en' ? 'active' : '';
       document.getElementById('btn-sw').className = lang === 'sw' ? 'active' : '';
     }
@@ -314,18 +659,15 @@
 
     function openCallModal() { document.getElementById('call-modal').classList.add('active'); }
     function openSmsModal() { document.getElementById('sms-modal').classList.add('active'); }
+    function openChatModal() { document.getElementById('chat-modal').classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     function initiateCall() {
       var phone = document.getElementById('call-phone').value.trim();
-      if (!phone || phone.length < 9) {
-        alert('Please enter a valid phone number');
-        return;
-      }
+      if (!phone || phone.length < 9) { alert('Please enter a valid phone number'); return; }
       closeModal('call-modal');
       showStatus('Initiating call... Your phone will ring shortly.', 'loading');
-
-      fetch(BASE_URL + '/api/scan/' + TAG_CODE + '/call', {
+      fetch(BASE_URL + '/s/' + TAG_CODE + '/call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scanner_phone: phone })
@@ -344,8 +686,7 @@
       if (!message) { alert('Please enter a message'); return; }
       closeModal('sms-modal');
       showStatus('Sending message...', 'loading');
-
-      fetch(BASE_URL + '/api/scan/' + TAG_CODE + '/sms', {
+      fetch(BASE_URL + '/s/' + TAG_CODE + '/sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: message, scanner_phone: phone || undefined })
@@ -353,16 +694,15 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.error) showStatus(data.error, 'error');
-        else showStatus('Message sent to the car owner!', 'success');
+        else showStatus('Message sent to the owner!', 'success');
       })
       .catch(function() { showStatus('Failed to send. Please try again.', 'error'); });
     }
 
     function contactEmergency() {
-      if (!confirm('Contact the owner\'s emergency contact? Use this only if the owner is unreachable.')) return;
+      if (!confirm('Contact the emergency contact? Only use this if the owner is unreachable.')) return;
       showStatus('Contacting emergency contact...', 'loading');
-
-      fetch(BASE_URL + '/api/scan/' + TAG_CODE + '/emergency', {
+      fetch(BASE_URL + '/s/' + TAG_CODE + '/emergency', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
@@ -380,6 +720,22 @@
         if (e.target === el) el.classList.remove('active');
       });
     });
+
+    // GPS capture
+    (function captureLocation() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          fetch(BASE_URL + '/s/' + TAG_CODE + '/location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
+          }).catch(function() {});
+        },
+        function() {},
+        { timeout: 10000, maximumAge: 60000 }
+      );
+    })();
   </script>
 </body>
 </html>

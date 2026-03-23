@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Tags — Activate Your Tag</title>
+  <meta name="theme-color" content="#0f2460">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0f2460;
+      --card: #1a3a8f;
+      --card-alt: #2451c4;
+      --accent: #dc2626;
+      --green: #22c55e;
+      --gold: #eab308;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 440px; width: 100%; padding: 16px; }
+    .brand {
+      font-weight: 700; font-size: 15px; color: var(--accent);
+      text-align: center; padding: 12px 0 20px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      border: 1px solid var(--card-alt);
+    }
+    .header { text-align: center; margin-bottom: 24px; }
+    .header .icon-ring {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), #16a34a);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; font-size: 32px;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .header p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+    .tag-code {
+      display: inline-block; font-size: 12px; color: var(--text-dim);
+      font-family: 'SF Mono', monospace; background: var(--bg);
+      padding: 3px 10px; border-radius: 20px; margin-top: 8px;
+    }
+
+    .vehicle-info {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; background: var(--bg);
+      border-radius: var(--radius-sm); margin-bottom: 24px;
+    }
+    .vehicle-info .v-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, #1e3a5f, #0f172a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .vehicle-info .v-desc { font-size: 15px; font-weight: 600; }
+    .vehicle-info .v-label {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--text-dim);
+      font-weight: 600; margin-bottom: 2px;
+    }
+
+    .price-box {
+      text-align: center; padding: 20px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: var(--radius-sm); margin-bottom: 24px;
+    }
+    .price-box .amount {
+      font-size: 36px; font-weight: 700; color: var(--green);
+    }
+    .price-box .period {
+      font-size: 14px; color: var(--text-muted); margin-top: 4px;
+    }
+    .price-box .includes {
+      font-size: 12px; color: var(--text-dim); margin-top: 12px; line-height: 1.8;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%; padding: 14px; border: 1px solid var(--card-alt);
+      border-radius: var(--radius-sm); font-size: 16px;
+      font-family: inherit; background: var(--bg); color: var(--text);
+      outline: none;
+    }
+    .form-group input:focus { border-color: var(--green); }
+    .form-group input::placeholder { color: var(--text-dim); }
+
+    .btn-pay {
+      width: 100%; padding: 16px; border: none; border-radius: var(--radius-sm);
+      font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit;
+      background: var(--green); color: #fff; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-pay:hover { background: #16a34a; }
+    .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-pay .icon { font-size: 20px; }
+
+    .status-msg {
+      text-align: center; padding: 14px; border-radius: var(--radius-sm);
+      margin-top: 16px; display: none; font-size: 14px; font-weight: 500;
+    }
+    .status-msg.success { display: block; background: rgba(34,197,94,0.12); color: var(--green); }
+    .status-msg.error { display: block; background: rgba(239,68,68,0.12); color: #ef4444; }
+    .status-msg.loading { display: block; background: rgba(59,130,246,0.12); color: var(--accent); }
+
+    .features {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px;
+    }
+    .feature {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; background: var(--bg);
+      border-radius: var(--radius-sm); font-size: 12px; color: var(--text-muted);
+    }
+    .feature .f-icon { font-size: 16px; }
+
+    .footer {
+      text-align: center; padding: 20px 0; font-size: 13px; color: var(--text-dim);
+    }
+    .footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand">Smart Tags</div>
+
+    <div class="card">
+      <div class="header">
+        <div class="icon-ring">&#x1F4B3;</div>
+        <h1>Activate Your Tag</h1>
+        <p>Your Smart Tag has been generated and is ready for activation. Pay via M-Pesa to start protecting your vehicle.</p>
+        <span class="tag-code"><%= tagCode %></span>
+      </div>
+
+      <div class="vehicle-info">
+        <div class="v-icon">
+          <% if (itemType === 'bike') { %>&#x1F6B2;<% } else if (itemType === 'luggage') { %>&#x1F9F3;<% } else { %>&#x1F697;<% } %>
+        </div>
+        <div>
+          <div class="v-label">Your Item</div>
+          <div class="v-desc">
+            <% if (vehicleColor && vehicleMake) { %><%= vehicleColor %> <%= vehicleMake %><% } else if (vehicleMake) { %><%= vehicleMake %><% } else { %>Registered item<% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="price-box">
+        <div class="amount">KES 500</div>
+        <div class="period">per year</div>
+        <div class="includes">
+          &#x2713; Anonymous call & SMS routing<br>
+          &#x2713; Scan notifications & GPS tracking<br>
+          &#x2713; Anonymous web chat<br>
+          &#x2713; Emergency contact alerts
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>M-Pesa Phone Number</label>
+        <input type="tel" id="pay-phone" placeholder="e.g. 0712 345 678" maxlength="13" value="<%= ownerPhone && ownerPhone !== '+254' ? ownerPhone.replace('+254', '0') : '' %>">
+      </div>
+
+      <button class="btn-pay" id="pay-btn" onclick="initiatePayment()">
+        <span class="icon">&#x1F4F1;</span>
+        <span>Pay with M-Pesa</span>
+      </button>
+
+      <div class="status-msg" id="status-msg"></div>
+
+      <div class="features">
+        <div class="feature"><span class="f-icon">&#x1F6E1;</span> Privacy protected</div>
+        <div class="feature"><span class="f-icon">&#x1F4CD;</span> GPS tracking</div>
+        <div class="feature"><span class="f-icon">&#x1F5E8;</span> Anonymous chat</div>
+        <div class="feature"><span class="f-icon">&#x1F6A8;</span> Emergency alerts</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Powered by <a href="<%= baseUrl %>">Smart Tags</a></p>
+    </div>
+  </div>
+
+  <script>
+    var TAG_CODE = '<%= tagCode %>';
+    var TAG_ID = '<%= tagId %>';
+    var BASE_URL = '<%= baseUrl %>';
+
+    function showStatus(msg, type) {
+      var el = document.getElementById('status-msg');
+      el.textContent = msg;
+      el.className = 'status-msg ' + type;
+    }
+
+    function initiatePayment() {
+      var phone = document.getElementById('pay-phone').value.trim();
+      if (!phone || phone.length < 9) {
+        showStatus('Please enter a valid M-Pesa phone number.', 'error');
+        return;
+      }
+
+      var btn = document.getElementById('pay-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="icon">&#x23F3;</span> Processing...';
+      showStatus('Sending M-Pesa payment request to your phone...', 'loading');
+
+      fetch(BASE_URL + '/api/payments/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          tag_id: TAG_ID,
+          phone: phone
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) {
+          showStatus(data.error, 'error');
+          btn.disabled = false;
+          btn.innerHTML = '<span class="icon">&#x1F4F1;</span> Pay with M-Pesa';
+        } else {
+          showStatus('Check your phone! Enter your M-Pesa PIN to complete the payment. Your tag will be activated automatically.', 'success');
+          // Poll for activation
+          pollActivation();
+        }
+      })
+      .catch(function() {
+        showStatus('Payment request failed. Please try again.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="icon">&#x1F4F1;</span> Pay with M-Pesa';
+      });
+    }
+
+    function pollActivation() {
+      var attempts = 0;
+      var interval = setInterval(function() {
+        attempts++;
+        if (attempts > 30) { // 60 seconds
+          clearInterval(interval);
+          showStatus('Payment timeout. If you paid, your tag will be activated shortly. Refresh to check.', 'error');
+          return;
+        }
+
+        fetch(BASE_URL + '/s/' + TAG_CODE, { method: 'HEAD', redirect: 'manual' })
+        .then(function(r) {
+          // If we get a 200 instead of the activation page, tag is active
+          if (r.ok || r.status === 200) {
+            clearInterval(interval);
+            showStatus('Payment successful! Your tag is now active. Redirecting...', 'success');
+            setTimeout(function() {
+              window.location.reload();
+            }, 2000);
+          }
+        })
+        .catch(function() {});
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

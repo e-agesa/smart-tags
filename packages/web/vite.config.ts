@@ -7,6 +7,20 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": "http://localhost:3000",
+      "/s/": "http://localhost:3000",
+      "/webhooks": "http://localhost:3000",
+      "/health": "http://localhost:3000",
+    },
+  },
+  build: {
+    outDir: "dist",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+        },
+      },
     },
   },
 });

@@ -7,8 +7,12 @@ interface Vehicle {
   license_plate: string;
   make: string | null;
   color: string | null;
+  item_type: string;
+  tag_id?: string;
   tag_code?: string;
   tag_status?: string;
+  tag_paused?: boolean;
+  tag_message?: string;
 }
 
 interface Tag {
@@ -16,6 +20,15 @@ interface Tag {
   tag_code: string;
   qr_data_url: string;
 }
+
+const ITEM_ICONS: Record<string, string> = {
+  car: "\u{1F697}",
+  bike: "\u{1F6B2}",
+  luggage: "\u{1F9F3}",
+  keys: "\u{1F511}",
+  pet: "\u{1F43E}",
+  other: "\u{1F4E6}",
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -31,6 +44,12 @@ export default function Dashboard() {
   const [payPhone, setPayPhone] = useState("");
   const [payLoading, setPayLoading] = useState(false);
   const [payStatus, setPayStatus] = useState("");
+  const [messageModal, setMessageModal] = useState<{
+    tagId: string;
+    tagCode: string;
+    currentMessage: string;
+  } | null>(null);
+  const [customMsg, setCustomMsg] = useState("");
 
   useEffect(() => {
     loadVehicles();
@@ -39,7 +58,7 @@ export default function Dashboard() {
   const loadVehicles = async () => {
     try {
       const data = await api.getVehicles();
-      setVehicles(data);
+      setVehicles(data as unknown as Vehicle[]);
     } catch (err) {
       if (err instanceof Error && err.message.includes("Authentication")) {
         navigate("/login");
@@ -61,6 +80,26 @@ export default function Dashboard() {
       setError(err instanceof Error ? err.message : "Failed to create tag");
     } finally {
       setCreatingTag(null);
+    }
+  };
+
+  const handleTogglePause = async (tagId: string) => {
+    try {
+      await api.toggleTagPause(tagId);
+      loadVehicles();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update tag");
+    }
+  };
+
+  const handleSaveMessage = async () => {
+    if (!messageModal) return;
+    try {
+      await api.updateTagMessage(messageModal.tagId, customMsg);
+      setMessageModal(null);
+      loadVehicles();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update message");
     }
   };
 
@@ -105,31 +144,33 @@ export default function Dashboard() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">My Vehicles</h2>
+        <h2 className="text-xl font-bold">My Items</h2>
         <Link
           to="/vehicles/new"
           className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold"
         >
-          + Add Vehicle
+          + Add Item
         </Link>
       </div>
 
       {error && (
         <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
           {error}
+          <button onClick={() => setError("")} className="float-right font-bold">&times;</button>
         </div>
       )}
 
       {vehicles.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
+          <p className="text-4xl mb-4">{ITEM_ICONS.car}</p>
           <p className="text-gray-500 mb-4">
-            No vehicles registered yet. Add your first vehicle to get a Car Park Tag.
+            No items registered yet. Add your first vehicle or item to get a Smart Tag.
           </p>
           <Link
             to="/vehicles/new"
             className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-semibold"
           >
-            Add Vehicle
+            Add Item
           </Link>
         </div>
       ) : (
@@ -137,11 +178,14 @@ export default function Dashboard() {
           {vehicles.map((v) => (
             <div key={v.id} className="bg-white rounded-2xl shadow-sm p-5">
               <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-bold text-lg">{v.license_plate}</h3>
-                  <p className="text-gray-500 text-sm">
-                    {[v.color, v.make].filter(Boolean).join(" ") || "Vehicle"}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{ITEM_ICONS[v.item_type] || ITEM_ICONS.other}</span>
+                  <div>
+                    <h3 className="font-bold text-lg">{v.license_plate}</h3>
+                    <p className="text-gray-500 text-sm">
+                      {[v.color, v.make].filter(Boolean).join(" ") || v.item_type}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => handleDeleteVehicle(v.id)}
@@ -153,45 +197,77 @@ export default function Dashboard() {
 
               <div className="mt-4 pt-4 border-t">
                 {v.tag_code ? (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                        {v.tag_code}
-                      </span>
-                      <span
-                        className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                          v.tag_status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : v.tag_status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {v.tag_status}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      {v.tag_status === "pending" && (
-                        <button
-                          onClick={() =>
-                            setPaymentModal({
-                              tagId: v.id,
-                              tagCode: v.tag_code!,
-                            })
-                          }
-                          className="text-sm bg-success text-white px-3 py-1 rounded-lg"
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                          {v.tag_code}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            v.tag_paused
+                              ? "bg-orange-100 text-orange-700"
+                              : v.tag_status === "active"
+                              ? "bg-green-100 text-green-700"
+                              : v.tag_status === "pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
                         >
-                          Pay & Activate
+                          {v.tag_paused ? "paused" : v.tag_status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Tag actions */}
+                    <div className="flex flex-wrap gap-2">
+                      {v.tag_status === "pending" && (
+                        <span className="text-xs bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg">
+                          Scan the QR code to activate & pay
+                        </span>
+                      )}
+
+                      {v.tag_status === "active" && (
+                        <button
+                          onClick={() => handleTogglePause(v.tag_id!)}
+                          className={`text-xs px-3 py-1.5 rounded-lg font-medium ${
+                            v.tag_paused
+                              ? "bg-blue-600 text-white"
+                              : "bg-orange-100 text-orange-700"
+                          }`}
+                        >
+                          {v.tag_paused ? "Resume" : "Pause"}
                         </button>
                       )}
+
+                      <button
+                        onClick={() => {
+                          setMessageModal({
+                            tagId: v.tag_id!,
+                            tagCode: v.tag_code!,
+                            currentMessage: v.tag_message || "",
+                          });
+                          setCustomMsg(v.tag_message || "");
+                        }}
+                        className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg font-medium"
+                      >
+                        {v.tag_message ? "Edit Message" : "Add Message"}
+                      </button>
+
                       <a
-                        href={`/api/tags/${v.id}/qr`}
+                        href={`/api/tags/${v.tag_id}/qr`}
                         download
-                        className="text-sm text-primary font-medium"
+                        className="text-xs text-primary font-medium px-3 py-1.5"
                       >
                         Download QR
                       </a>
                     </div>
+
+                    {v.tag_message && (
+                      <div className="mt-3 text-xs text-gray-500 bg-blue-50 px-3 py-2 rounded-lg">
+                        "{v.tag_message}"
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <button
@@ -201,7 +277,7 @@ export default function Dashboard() {
                   >
                     {creatingTag === v.id
                       ? "Generating..."
-                      : "Generate Car Park Tag"}
+                      : "Generate Smart Tag"}
                   </button>
                 )}
               </div>
@@ -220,7 +296,7 @@ export default function Dashboard() {
             className="bg-white rounded-2xl p-6 max-w-sm w-full text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-bold text-lg mb-2">Your Car Park Tag</h3>
+            <h3 className="font-bold text-lg mb-2">Your Smart Tag</h3>
             <p className="text-gray-500 text-sm mb-4">
               Tag Code: <span className="font-mono">{qrModal.tag_code}</span>
             </p>
@@ -230,8 +306,7 @@ export default function Dashboard() {
               className="mx-auto mb-4 w-48 h-48"
             />
             <p className="text-sm text-gray-500 mb-4">
-              Print this QR code and place it on your windshield. Pay KES 500 to
-              activate it.
+              Print this QR code and attach it to your item. Pay KES 500 to activate.
             </p>
             <button
               onClick={() => setQrModal(null)}
@@ -286,9 +361,49 @@ export default function Dashboard() {
               <button
                 onClick={handlePayment}
                 disabled={payLoading || !payPhone}
-                className="flex-1 bg-success text-white py-2 rounded-lg font-semibold disabled:opacity-50"
+                className="flex-1 bg-green-600 text-white py-2 rounded-lg font-semibold disabled:opacity-50"
               >
                 {payLoading ? "Processing..." : "Pay KES 500"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Message Modal */}
+      {messageModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setMessageModal(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-bold text-lg mb-2">Custom Message</h3>
+            <p className="text-gray-500 text-sm mb-4">
+              This message will be shown to anyone who scans tag{" "}
+              <span className="font-mono">{messageModal.tagCode}</span>
+            </p>
+            <textarea
+              value={customMsg}
+              onChange={(e) => setCustomMsg(e.target.value)}
+              placeholder="e.g. If I'm blocking you, please call me. I'll move within 5 minutes."
+              className="w-full px-3 py-2 border rounded-lg mb-3 text-sm"
+              rows={3}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setMessageModal(null)}
+                className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveMessage}
+                className="flex-1 bg-primary text-white py-2 rounded-lg font-semibold"
+              >
+                Save
               </button>
             </div>
           </div>

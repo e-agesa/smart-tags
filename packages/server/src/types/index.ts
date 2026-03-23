@@ -2,10 +2,14 @@ export interface User {
   id: string;
   full_name: string;
   phone: string;
+  email: string | null;
   phone_verified: boolean;
   emergency_phone: string | null;
   emergency_name: string | null;
-  password_hash: string;
+  password_hash: string | null;
+  oauth_provider: string | null;
+  oauth_id: string | null;
+  avatar_url: string | null;
   lang_pref: string;
   created_at: Date;
   updated_at: Date;
@@ -17,6 +21,7 @@ export interface Vehicle {
   license_plate: string;
   make: string | null;
   color: string | null;
+  item_type: "car" | "bike" | "luggage" | "keys" | "pet" | "other";
   created_at: Date;
 }
 
@@ -26,6 +31,8 @@ export interface Tag {
   tag_code: string;
   qr_data_url: string | null;
   status: "pending" | "active" | "suspended" | "expired";
+  is_paused: boolean;
+  custom_message: string | null;
   activated_at: Date | null;
   expires_at: Date | null;
   created_at: Date;
@@ -37,6 +44,11 @@ export interface ScanSession {
   scanner_ip: string | null;
   scanner_phone: string | null;
   source: "qr" | "sms" | "whatsapp";
+  latitude: number | null;
+  longitude: number | null;
+  user_agent: string | null;
+  city: string | null;
+  country: string | null;
   created_at: Date;
 }
 
