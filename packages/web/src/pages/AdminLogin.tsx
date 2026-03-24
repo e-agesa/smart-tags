@@ -26,11 +26,9 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-primary-dark flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-accent mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <span className="text-white font-extrabold text-2xl">ST</span>
-          </div>
+          <img src="/logo.jpg" alt="LetsTag.me" className="h-16 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-          <p className="text-blue-300 mt-1">Smart Tags Administration</p>
+          <p className="text-blue-300 mt-1">LetsTag.me Administration</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-primary rounded-2xl p-6 space-y-4 border border-white/10 shadow-xl">

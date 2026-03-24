@@ -19,12 +19,7 @@ export default function Landing() {
     <div className="min-h-screen bg-primary-dark text-white">
       {/* Nav */}
       <nav className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-gold flex items-center justify-center">
-            <span className="text-primary-dark font-extrabold text-base">ST</span>
-          </div>
-          <span className="text-xl font-bold text-white">Smart Tags</span>
-        </div>
+        <img src="/logo.jpg" alt="LetsTag.me" className="h-10" />
         <div className="flex gap-3">
           <Link to="/login" className="text-sm text-blue-200 hover:text-white px-3 py-2">Sign In</Link>
           <Link to="/register" className="text-sm bg-accent text-white px-5 py-2 rounded-lg font-semibold hover:bg-accent-light transition-all shadow-md">Get Started</Link>
@@ -159,10 +154,8 @@ export default function Landing() {
       <footer className="border-t border-white/10 py-8 bg-primary-dark">
         <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-gold flex items-center justify-center">
-              <span className="text-primary-dark font-extrabold text-xs">ST</span>
-            </div>
-            <span className="text-sm text-blue-300">&copy; 2026 Smart Tags. All rights reserved.</span>
+            <img src="/logo.jpg" alt="LetsTag.me" className="h-6" />
+            <span className="text-sm text-blue-300">&copy; 2026 LetsTag.me. All rights reserved.</span>
           </div>
           <div className="flex gap-6 text-sm text-blue-300">
             <a href="#" className="hover:text-gold transition-colors">Privacy</a>

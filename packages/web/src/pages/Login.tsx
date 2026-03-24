@@ -51,10 +51,8 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gold mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <span className="text-primary-dark font-extrabold text-2xl">ST</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Smart Tags</h1>
+          <img src="/logo.jpg" alt="LetsTag.me" className="h-16 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-white">LetsTag.me</h1>
           <p className="text-blue-300 mt-1">Sign in to manage your tags</p>
         </div>
 

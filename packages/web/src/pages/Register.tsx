@@ -71,9 +71,7 @@ export default function Register() {
     <div className="min-h-screen bg-primary-dark flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gold mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <span className="text-primary-dark font-extrabold text-2xl">ST</span>
-          </div>
+          <img src="/logo.jpg" alt="LetsTag.me" className="h-16 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white">Get Your Smart Tag</h1>
           <p className="text-blue-300 mt-1">
             {step === "details" ? "Create your account — 1 month free!" : "Verify your phone number"}
