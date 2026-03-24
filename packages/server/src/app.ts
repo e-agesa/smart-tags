@@ -57,23 +57,25 @@ app.disable("x-powered-by");
 
 // ---- Routes ----
 
-// Root
-app.get("/", (_req, res) => {
-  res.json({
-    name: "Smart Tags API",
-    version: "1.0.0",
-    status: "running",
-    docs: {
-      health: "/health",
-      auth: "/api/auth",
-      vehicles: "/api/vehicles",
-      tags: "/api/tags",
-      payments: "/api/payments",
-      admin: "/api/admin",
-      scan: "/s/:tagCode",
-    },
+// API info (only in dev — production serves React at /)
+if (process.env.NODE_ENV !== "production") {
+  app.get("/", (_req, res) => {
+    res.json({
+      name: "Smart Tags API",
+      version: "1.0.0",
+      status: "running",
+      docs: {
+        health: "/health",
+        auth: "/api/auth",
+        vehicles: "/api/vehicles",
+        tags: "/api/tags",
+        payments: "/api/payments",
+        admin: "/api/admin",
+        scan: "/s/:tagCode",
+      },
+    });
   });
-});
+}
 
 // Health check
 app.get("/health", (_req, res) => {
